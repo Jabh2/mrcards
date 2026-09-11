@@ -2910,6 +2910,20 @@ const deckCategories = [
 
 const deckIcons = ['📚', '🧬', '📖', '➗', '🌍', '💻', '🧠', '⚖️', '💡', '🔬'];
 
+/// Iconos de cuestionario agrupados por área/materia.
+/// `deckIcons` se mantiene por compatibilidad (iconos originales).
+const deckIconGroups = <String, List<String>>{
+  'Letras e Idiomas': ['📚', '📖', '🔤', '💬', '🗣️', '✍️', '📝'],
+  'Ciencias': ['🔬', '🧬', '🧪', '⚗️', '🔭', '🧲'],
+  'Matemáticas': ['➗', '📐', '📊', '📈', '🧮'],
+  'Tecnología': ['💻', '🖥️', '⌨️', '🌐', '🤖', '⚙️'],
+  'Salud': ['🩺', '💊', '🧠', '🦷', '🩻', '🚑'],
+  'Leyes y Negocios': ['⚖️', '💼', '💰', '📑', '🏦'],
+  'Historia y Geo': ['🏛️', '🌍', '🗺️', '🏺', '🕰️'],
+  'Artes': ['🎨', '🎭', '🎵', '🎸', '📷', '✏️'],
+  'Otros': ['🌱', '⚽', '🍳', '✈️', '💡', '🎯', '🏆'],
+};
+
 const deckColors = [
   0xff6c4df6,
   0xff3b82f6,
@@ -2970,18 +2984,29 @@ class _DeckFormState extends State<DeckForm> {
               const SizedBox(height: 16),
               Text(t('iconLabel')),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: deckIcons
-                    .map(
-                      (e) => ChoiceChip(
-                        label: Text(e),
-                        selected: icon == e,
-                        onSelected: (_) => setState(() => icon = e),
-                      ),
-                    )
-                    .toList(),
-              ),
+              for (final entry in deckIconGroups.entries) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 6),
+                  child: Text(
+                    entry.key,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: entry.value
+                      .map(
+                        (e) => ChoiceChip(
+                          label: Text(e),
+                          selected: icon == e,
+                          onSelected: (_) => setState(() => icon = e),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(t('colorLabel')),
               const SizedBox(height: 8),

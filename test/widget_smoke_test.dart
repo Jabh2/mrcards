@@ -33,8 +33,20 @@ void main() {
   testWidgets('DeckForm exige nombre', (t) async {
     await t.pumpWidget(const MaterialApp(home: DeckForm()));
     await t.pumpAndSettle();
+    // El form con grupos de iconos excede el viewport: desplazar al botón.
+    await t.scrollUntilVisible(
+      find.text('Guardar'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await t.tap(find.text('Guardar'));
     await t.pump();
+    // El error aparece en el campo nombre (arriba): volver a subir.
+    await t.scrollUntilVisible(
+      find.text('Escribe un nombre'),
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Escribe un nombre'), findsOneWidget);
   });
 
