@@ -4,15 +4,18 @@ OK (reusar tal cual en Play Console > Gráficos):
 - store/icon-512.png — icono 512x512 PNG (verificado visual, re-subir)
 - store/feature-1024x500.png — 1024x500, texto ES "Estudia • Practica • Recuerda • 100% offline"
 
-TODO antes de producción:
-- [ ] feature-en-1024x500.png — crear copia EN para ficha default en-US:
-      texto "Study • Practice • Remember • 100% offline", mismo fondo #0F172A, 1024x500 PNG
-      (por ahora se puede subir la ES, pero Play mostrará ES en ficha EN)
-- [ ] phone-1/phone-2-1080x1920.png — PLACEHOLDERS ("sube captura real del emulador")
-      Mínimo Play: 2 screenshots teléfono. Ideal 4-8 reales:
+Estado 11-sep-2026 (corregido):
+- [x] feature-en-1024x500.png — CREADO, 1024x500, texto EN "Study • Practice • Remember • 100% offline".
+      Subir este en ficha en-US; feature-1024x500.png (ES) para ficha es-ES.
+- [x] phone-1/phone-2-1080x1920.png — REEMPLAZADOS. Ya no dicen "sube captura real".
+      Son mockups promocionales 1080x1920 EN (decks+modos / repetición+progreso).
+      Válidos para Play (mínimo 2 cumplido).
+
+Recomendado antes de producción (opcional, mejora conversión):
+- [ ] Sustituir mockups por 4-8 capturas reales del emulador:
       1. home/mazos 2. editor pregunta 3. sesión estudio 4. stats/logros
-      Cómo: flutter run -d emulator (Pixel 1080x1920), screencap o captura Play,
-      sobrescribir mismos nombres, mantener 1080x1920 portrait PNG/JPEG.
+      Cómo: flutter run -d emulator (Pixel 1080x1920), screencap,
+      sobrescribir mismos nombres, mantener 1080x1920 portrait.
 - [ ] Opcional tablet 7"/10" y Chromebook si quieres badge optimizado.
 
 Límites Play recordar:
