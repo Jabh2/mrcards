@@ -1,0 +1,29 @@
+MrCards Play Console — Ficha predeterminada
+App: MrCards — com.mrcards.app — version 1.0.0+1
+Default language: en-US (+ es-ES translation)
+
+Category: Education
+Tags: flashcards, spaced repetition, offline study, exam prep
+Type: Free, no in-app purchases
+Contains ads: false (sin publicidad por ahora)
+Content rating target: Everyone
+Target age: 5+ (perfil edad minima 5 en privacy)
+
+Contact (public):
+- Email: jabh2016@gmail.com
+- Privacy: https://jabh2.github.io/mrcards/privacy.html
+- Repo: https://github.com/Jabh2/mrcards
+
+Data Safety (actual):
+- Collects: No / Shares: No
+- Encryption in transit: N/A (no network)
+- Delete: Yes via Settings > Data > Delete all + uninstall
+- Permissions release: none (INTERNET only in debug/profile)
+
+Copy-paste Play Console:
+- Title EN: content of en-US/title.txt (<=30)
+- Short EN: content of en-US/short.txt (<=80)
+- Full EN: content of en-US/full.txt (<=4000)
+- Title ES: content of es-ES/title.txt
+- Short ES / Full ES: idem
+- Changelog: content of changelog-10001.txt

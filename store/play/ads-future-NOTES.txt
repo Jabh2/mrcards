@@ -1,0 +1,26 @@
+FUTURO — cuando agregues publicidad (AdMob)
+
+No hacer ahora. Cuando tengas App ID + unit IDs:
+
+1. Deps: flutter pub add google_mobile_ads (+ user_messaging_platform para UMP/consent UE)
+2. AndroidManifest.xml (main):
+   - <uses-permission INTERNET /> + com.google.android.gms.permission.AD_ID
+   - <meta-data com.google.android.gms.ads.APPLICATION_ID value="ca-app-pub-XXXX~YYYY" />
+3. ios/Runner/Info.plist:
+   - GADApplicationIdentifier = ca-app-pub-XXXX~YYYY
+   - SKAdNetworkItems (Google) + NSUserTrackingUsageDescription si ATT
+4. Dart: MobileAds.instance.initialize(), UMP requestConsentInfoUpdateForm + show,
+   BannerAd abajo en home/estudio (test IDs primero), opcional Interstitial tras sesión
+   y Rewarded para +XP. tagForChildDirected=false (público general, no Familias).
+5. Legal obligatorio ese día:
+   - docs/privacy.html + privacy-en.html: quitar "sin publicidad / sin internet",
+     añadir sección Ads: AdMob recolecta Advertising ID, datos de uso; link
+     https://policies.google.com/privacy + opt-out; bump fecha.
+   - store/DATA_SAFETY.txt: Collects=Yes (Device ID), Shares=Yes (con Google),
+     Encryption in transit=Yes. Actualizar Play Data Safety.
+   - Esta ficha: containsAds false->true, añadir "Contains ads" en full EN/ES.
+   - Re-push docs/ a Pages (master/docs) y re-verificar 200.
+6. Builds: flutter build appbundle --release, subir a track interno, declarar
+   AD_ID en Play Console > Policy > Advertising ID.
+
+Orden sugerido: banner solo primero, medir, luego intersticial/bonificado.

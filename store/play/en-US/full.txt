@@ -1,0 +1,33 @@
+MrCards — Study, Practice & Remember. 100% offline.
+
+Create decks and master what you study with smart spaced repetition. No account, no internet, your data stays on your device.
+
+7 QUESTION TYPES
+• Flashcards, multiple choice, true/false, written, ordering, matching, image choice
+• Hints, explanations and image prompts supported
+
+4 STUDY MODES
+• Review: learn at your pace with Again / Hard / Good / Easy ratings
+• Random: shuffled sessions with smart filters (difficult, least studied, due)
+• Exam: timed simulation with no re-queue, final score
+• Marathon: endless session until you master every card
+• Mistakes are smartly re-queued until mastered
+
+PROGRESS THAT MOTIVATES
+• XP, levels (Beginner to Legend), daily streaks, achievements
+• Detailed stats: accuracy, last 50 sessions, per-deck progress
+• Daily local reminder to keep your streak alive
+
+6 LANGUAGES
+• English, Spanish, Portuguese, French, German, Chinese
+• Full UI translation, works fully offline
+
+PRIVACY FIRST
+• 100% offline — stored locally with SharedPreferences (mrcards.v1)
+• No analytics, no ads, no third-party SDKs, no account
+• Export JSON for portability, Delete all in Settings > Data
+• Privacy policy: https://jabh2.github.io/mrcards/privacy.html
+
+Perfect for students, exams, languages, medicine, law and any memorization.
+
+Download MrCards and turn study time into mastered knowledge.

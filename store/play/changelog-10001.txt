@@ -1,0 +1,5 @@
+EN (default, 1.0.0+1):
+Initial release: offline decks, 7 question types, 4 study modes, spaced repetition, levels, streaks and achievements. 6 languages. No account, no ads.
+
+ES (1.0.0+1):
+Versión inicial: mazos offline, 7 tipos de pregunta, 4 modos de estudio, repetición espaciada, niveles, rachas y logros. 6 idiomas. Sin cuenta, sin anuncios.

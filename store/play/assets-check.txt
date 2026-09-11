@@ -1,0 +1,19 @@
+Assets check — MrCards 1.0.0+1 (11-sep-2026)
+
+OK (reusar tal cual en Play Console > Gráficos):
+- store/icon-512.png — icono 512x512 PNG (verificado visual, re-subir)
+- store/feature-1024x500.png — 1024x500, texto ES "Estudia • Practica • Recuerda • 100% offline"
+
+TODO antes de producción:
+- [ ] feature-en-1024x500.png — crear copia EN para ficha default en-US:
+      texto "Study • Practice • Remember • 100% offline", mismo fondo #0F172A, 1024x500 PNG
+      (por ahora se puede subir la ES, pero Play mostrará ES en ficha EN)
+- [ ] phone-1/phone-2-1080x1920.png — PLACEHOLDERS ("sube captura real del emulador")
+      Mínimo Play: 2 screenshots teléfono. Ideal 4-8 reales:
+      1. home/mazos 2. editor pregunta 3. sesión estudio 4. stats/logros
+      Cómo: flutter run -d emulator (Pixel 1080x1920), screencap o captura Play,
+      sobrescribir mismos nombres, mantener 1080x1920 portrait PNG/JPEG.
+- [ ] Opcional tablet 7"/10" y Chromebook si quieres badge optimizado.
+
+Límites Play recordar:
+- title <=30, short <=80, full <=4000, changelog <=500 por idioma.
