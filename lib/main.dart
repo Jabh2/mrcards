@@ -2778,9 +2778,12 @@ class DeckDetail extends StatelessWidget {
       ),
     );
     List<PdfDraft> drafts = [];
+    var ignored = 0;
     String? error;
     try {
-      drafts = draftsFromText(await extractPdfText(path));
+      final result = draftsFromText(await extractPdfText(path));
+      drafts = result.drafts;
+      ignored = result.ignored;
       if (drafts.isEmpty) error = 'No se detectaron preguntas en el PDF.';
     } catch (_) {
       error = 'No se pudo leer el PDF (¿escaneado sin texto?).';
@@ -2794,8 +2797,8 @@ class DeckDetail extends StatelessWidget {
     final created = await Navigator.push<List<Question>>(
       c,
       MaterialPageRoute(
-        builder: (_) =>
-            PdfImportReviewScreen(deckId: deck.id, drafts: drafts),
+        builder: (_) => PdfImportReviewScreen(
+            deckId: deck.id, drafts: drafts, ignored: ignored),
       ),
     );
     if (created != null && created.isNotEmpty && c.mounted) {
@@ -3133,9 +3136,13 @@ class _DeckFormState extends State<DeckForm> {
 /// error (sin pregunta/respuesta u opciones insuficientes).
 class PdfImportReviewScreen extends StatefulWidget {
   const PdfImportReviewScreen(
-      {super.key, required this.deckId, required this.drafts});
+      {super.key,
+      required this.deckId,
+      required this.drafts,
+      this.ignored = 0});
   final String deckId;
   final List<PdfDraft> drafts;
+  final int ignored;
   @override
   State<PdfImportReviewScreen> createState() => _PdfImportReviewState();
 }
@@ -3237,11 +3244,13 @@ class _PdfImportReviewState extends State<PdfImportReviewScreen> {
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 4),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
             child: Text(
-              'Verifica el tipo detectado y completa las respuestas. Todo queda en tu dispositivo.',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
+              widget.ignored > 0
+                  ? 'Verifica el tipo detectado y completa las respuestas. Se ignoraron ${widget.ignored} bloques de ruido (encabezados, instrucciones, clave). Todo queda en tu dispositivo.'
+                  : 'Verifica el tipo detectado y completa las respuestas. Todo queda en tu dispositivo.',
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
           ),
           Expanded(
