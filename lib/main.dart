@@ -11,6 +11,8 @@ import 'core/qc_animate.dart';
 import 'core/translations.dart';
 import 'services/device_images.dart';
 import 'services/image_refs.dart';
+import 'services/pdf_import.dart';
+import 'services/pdf_parse.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2689,6 +2691,11 @@ class DeckDetail extends StatelessWidget {
                 icon: const Icon(Icons.playlist_add),
                 label: Text(t('addBulk')),
               ),
+              TextButton.icon(
+                onPressed: () => _importPdf(c),
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: const Text('Importar PDF'),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -2749,6 +2756,56 @@ class DeckDetail extends StatelessWidget {
       store.questions.add(q);
       deck.updatedAt = DateTime.now();
       await store.save();
+    }
+  }
+
+  /// Importa un PDF al cuestionario actual: picker → extracción on-device
+  /// → pantalla de revisión → guardar. Nada sale del dispositivo.
+  Future<void> _importPdf(BuildContext c) async {
+    final path = await pickPdfFile();
+    if (path == null || !c.mounted) return;
+    showDialog(
+      context: c,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Expanded(child: Text('Leyendo PDF…')),
+          ],
+        ),
+      ),
+    );
+    List<PdfDraft> drafts = [];
+    String? error;
+    try {
+      drafts = draftsFromText(await extractPdfText(path));
+      if (drafts.isEmpty) error = 'No se detectaron preguntas en el PDF.';
+    } catch (_) {
+      error = 'No se pudo leer el PDF (¿escaneado sin texto?).';
+    }
+    if (c.mounted) Navigator.pop(c);
+    if (!c.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    final created = await Navigator.push<List<Question>>(
+      c,
+      MaterialPageRoute(
+        builder: (_) =>
+            PdfImportReviewScreen(deckId: deck.id, drafts: drafts),
+      ),
+    );
+    if (created != null && created.isNotEmpty && c.mounted) {
+      store.questions.addAll(created);
+      deck.updatedAt = DateTime.now();
+      await store.save();
+      if (!c.mounted) return;
+      ScaffoldMessenger.of(c).showSnackBar(
+        SnackBar(content: Text('${created.length} preguntas importadas')),
+      );
     }
   }
 
@@ -3064,6 +3121,249 @@ class _DeckFormState extends State<DeckForm> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Revisión de preguntas detectadas en un PDF antes de guardar.
+///
+/// Cada borrador muestra su tipo detectado (editable), pregunta y
+/// respuesta editables. No se puede guardar mientras haya items con
+/// error (sin pregunta/respuesta u opciones insuficientes).
+class PdfImportReviewScreen extends StatefulWidget {
+  const PdfImportReviewScreen(
+      {super.key, required this.deckId, required this.drafts});
+  final String deckId;
+  final List<PdfDraft> drafts;
+  @override
+  State<PdfImportReviewScreen> createState() => _PdfImportReviewState();
+}
+
+class _PdfImportReviewState extends State<PdfImportReviewScreen> {
+  late final prompts =
+      widget.drafts.map((d) => TextEditingController(text: d.prompt)).toList();
+  late final answers =
+      widget.drafts.map((d) => TextEditingController(text: d.answer)).toList();
+  late final extras = widget.drafts.map((d) {
+    return TextEditingController(
+        text: d.kind == 'matching' ? d.pairs.join('\n') : d.options.join('\n'));
+  }).toList();
+
+  @override
+  void dispose() {
+    for (final c in [...prompts, ...answers, ...extras]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  QuestionType _kindOf(int i) {
+    try {
+      return QuestionType.values.byName(widget.drafts[i].kind);
+    } catch (_) {
+      return QuestionType.flashcard;
+    }
+  }
+
+  /// Error del item o null si está listo para guardar.
+  String? _errorOf(int i) {
+    if (prompts[i].text.trim().isEmpty) return 'Falta la pregunta';
+    if (answers[i].text.trim().isEmpty) return 'Falta la respuesta';
+    final t = _kindOf(i);
+    if (t == QuestionType.multipleChoice &&
+        _lines(extras[i].text).length < 2) {
+      return 'Faltan opciones (mínimo 2, una por línea)';
+    }
+    if (t == QuestionType.matching && _lines(extras[i].text).length < 2) {
+      return 'Faltan pares (mínimo 2, formato: izquierda|derecha)';
+    }
+    if (t == QuestionType.ordering && _lines(extras[i].text).isEmpty) {
+      return 'Faltan pasos (uno por línea, en orden correcto)';
+    }
+    return null;
+  }
+
+  static List<String> _lines(String s) => s
+      .split('\n')
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  void _save() {
+    var bad = 0;
+    for (var i = 0; i < widget.drafts.length; i++) {
+      if (_errorOf(i) != null) bad++;
+    }
+    if (bad > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Revisa $bad pregunta(s) marcada(s) o descártala(s)')),
+      );
+      setState(() {});
+      return;
+    }
+    final out = <Question>[];
+    for (var i = 0; i < widget.drafts.length; i++) {
+      final t = _kindOf(i);
+      final extra = _lines(extras[i].text);
+      out.add(
+        Question(
+          id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+          deckId: widget.deckId,
+          type: t,
+          prompt: prompts[i].text.trim(),
+          answer: t == QuestionType.ordering && extra.isNotEmpty
+              ? extra.join(',')
+              : answers[i].text.trim(),
+          options: (t == QuestionType.multipleChoice ||
+                  t == QuestionType.ordering)
+              ? extra
+              : <String>[],
+          pairs: t == QuestionType.matching ? extra : <String>[],
+        ),
+      );
+    }
+    Navigator.pop(context, out);
+  }
+
+  @override
+  Widget build(BuildContext c) {
+    final pending = widget.drafts.length; // total en revisión
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Revisar PDF ($pending)'),
+      ),
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 4),
+            child: Text(
+              'Verifica el tipo detectado y completa las respuestas. Todo queda en tu dispositivo.',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: widget.drafts.length,
+              itemBuilder: (ctx, i) {
+                final d = widget.drafts[i];
+                final err = _errorOf(i);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text('Pregunta ${i + 1}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 8),
+                            Chip(
+                              label: Text(
+                                  '${(d.confidence * 100).round()}% auto'),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              tooltip: 'Descartar',
+                              onPressed: () => setState(() {
+                                prompts.removeAt(i).dispose();
+                                answers.removeAt(i).dispose();
+                                extras.removeAt(i).dispose();
+                                widget.drafts.removeAt(i);
+                              }),
+                            ),
+                          ],
+                        ),
+                        DropdownButtonFormField<String>(
+                          initialValue: d.kind,
+                          decoration:
+                              const InputDecoration(labelText: 'Tipo'),
+                          items: QuestionType.values
+                              .map((x) => DropdownMenuItem(
+                                    value: x.name,
+                                    child: Text(_typeName(x)),
+                                  ))
+                              .toList(),
+                          onChanged: (x) =>
+                              setState(() => d.kind = x ?? 'flashcard'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: prompts[i],
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                              labelText: 'Pregunta'),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 8),
+                        if (_kindOf(i) == QuestionType.multipleChoice ||
+                            _kindOf(i) == QuestionType.ordering ||
+                            _kindOf(i) == QuestionType.matching)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: TextField(
+                              controller: extras[i],
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                labelText: _kindOf(i) ==
+                                        QuestionType.matching
+                                    ? 'Pares (uno por línea: izquierda|derecha)'
+                                    : _kindOf(i) ==
+                                            QuestionType.ordering
+                                        ? 'Pasos en orden (uno por línea)'
+                                        : 'Opciones (una por línea)',
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ),
+                        TextField(
+                          controller: answers[i],
+                          decoration: InputDecoration(
+                            labelText: 'Respuesta correcta',
+                            helperText: _kindOf(i) ==
+                                    QuestionType.trueFalse
+                                ? 'Escribe Verdadero o Falso'
+                                : null,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        if (err != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(err,
+                                style: const TextStyle(
+                                    color: Colors.red, fontSize: 12)),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed:
+                      widget.drafts.isEmpty ? null : _save,
+                  child: Text(
+                      'Guardar ${widget.drafts.length} en el cuestionario'),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

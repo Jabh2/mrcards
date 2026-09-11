@@ -37,6 +37,8 @@ dependencies:
   shared_preferences: ^2.5.4
   image_picker: ^1.1.2
   path_provider: ^2.1.4
+  file_picker: ^12.3.0
+  pdfrx: ^2.6.1
 
 dev_dependencies:
   flutter_test:
