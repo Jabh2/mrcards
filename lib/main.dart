@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/qc_theme.dart';
 import 'core/qc_animate.dart';
 import 'core/translations.dart';
+import 'services/device_images.dart';
+import 'services/image_refs.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2817,6 +2819,9 @@ class DeckDetail extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () async {
+            for (final r in q.imageUrls.where(isLocalImageRef)) {
+              await deleteImageRef(r);
+            }
             store.questions.remove(q);
             deck.updatedAt = DateTime.now();
             await store.save();
@@ -2850,8 +2855,16 @@ class DeckDetail extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () async {
+            final refs = store.questions
+                .where((x) => x.deckId == deck.id)
+                .expand((x) => x.imageUrls)
+                .where(isLocalImageRef)
+                .toList();
             store.decks.remove(deck);
             store.questions.removeWhere((q) => q.deckId == deck.id);
+            for (final r in refs) {
+              await deleteImageRef(r);
+            }
             await store.save();
             if (c.mounted) {
               Navigator.pop(c);
@@ -3072,6 +3085,40 @@ class _QuestionFormState extends State<QuestionForm> {
   late String tfValue = (widget.existing?.type == QuestionType.trueFalse)
       ? widget.existing!.answer
       : 'Verdadero';
+  // Fotos del dispositivo (refs `file:`) separadas del campo de texto/URL.
+  List<String> deviceImgs = [];
+  @override
+  void initState() {
+    super.initState();
+    final all = images.text
+        .split('\n')
+        .where((x) => x.trim().isNotEmpty)
+        .map((x) => x.trim())
+        .toList();
+    deviceImgs = all.where(isLocalImageRef).toList();
+    images.text = all.where((x) => !isLocalImageRef(x)).join('\n');
+  }
+  List<String> _typedImgs() => images.text
+      .split('\n')
+      .where((x) => x.trim().isNotEmpty)
+      .map((x) => x.trim())
+      .toList();
+  List<String> _combinedImgs() =>
+      [...deviceImgs, ..._typedImgs()].take(kMaxImagesPerQuestion).toList();
+  Future<void> _pickDeviceImage(Future<String?> Function() pick) async {
+    if (_combinedImgs().length >= kMaxImagesPerQuestion) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Máximo 4 imágenes por pregunta')),
+        );
+      }
+      return;
+    }
+    final ref = await pick();
+    if (ref == null || !mounted) return;
+    setState(() => deviceImgs.add(ref));
+  }
   @override
   Widget build(BuildContext c) {
     final isEdit = widget.existing != null;
@@ -3148,13 +3195,125 @@ class _QuestionFormState extends State<QuestionForm> {
               const SizedBox(height: 14),
             ],
             if (type == QuestionType.imageChoice) ...[
+              // Fotos del dispositivo: vista previa, tap = marcar correcta.
+              if (_combinedImgs().isNotEmpty)
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemCount: _combinedImgs().length,
+                  itemBuilder: (ctx, idx) {
+                    final ref = _combinedImgs()[idx];
+                    final isMarked =
+                        answer.text.trim().isNotEmpty &&
+                            answer.text.trim() == ref;
+                    return GestureDetector(
+                      onTap: () => setState(() => answer.text = ref),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: isMarked
+                                    ? QCTokens.primary
+                                    : Theme.of(c)
+                                        .colorScheme
+                                        .outlineVariant,
+                                width: isMarked ? 3 : 1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: imageRefThumb(ref),
+                          ),
+                          if (isMarked)
+                            const Positioned(
+                              top: 6,
+                              left: 6,
+                              child: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: QCTokens.primary,
+                                child: Icon(Icons.check,
+                                    size: 18, color: Colors.white),
+                              ),
+                            ),
+                          Positioned(
+                            top: 2,
+                            right: 2,
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 20),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black54,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size(32, 32),
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: () async {
+                                setState(() {
+                                  deviceImgs.remove(ref);
+                                  final typed = _typedImgs()
+                                    ..remove(ref);
+                                  images.text = typed.join('\n');
+                                  if (answer.text.trim() == ref) {
+                                    answer.text = '';
+                                  }
+                                });
+                                await deleteImageRef(ref);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              if (_combinedImgs().isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 6, bottom: 6),
+                  child: Text(
+                    'Toca una foto para marcarla como respuesta correcta.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          _pickDeviceImage(pickGalleryImage),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Galería'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          _pickDeviceImage(pickCameraImage),
+                      icon: const Icon(Icons.photo_camera),
+                      label: const Text('Cámara'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
               TextFormField(
                 controller: images,
-                maxLines: 4,
+                maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Imágenes (una por línea, URL o texto)',
-                  helperText: 'Se mostrarán en grid 2x2. La respuesta debe coincidir con una',
+                  labelText: 'URLs o texto (una por línea, opcional)',
+                  helperText:
+                      'Máximo 4 en total con las fotos. Se muestran en grid 2x2',
                 ),
+                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 14),
             ],
@@ -3237,8 +3396,17 @@ class _QuestionFormState extends State<QuestionForm> {
             ),
             const SizedBox(height: 28),
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 if (!form.currentState!.validate()) return;
+                if (type == QuestionType.imageChoice &&
+                    _combinedImgs().length < 2) {
+                  ScaffoldMessenger.of(c).showSnackBar(
+                    const SnackBar(
+                        content:
+                            Text('Agrega al menos 2 imágenes')),
+                  );
+                  return;
+                }
                 var finalAnswer = type == QuestionType.trueFalse
                     ? tfValue
                     : answer.text.trim();
@@ -3268,7 +3436,17 @@ class _QuestionFormState extends State<QuestionForm> {
                     .map((x) => x.trim())
                     .toList();
                 final pairList = pairs.text.split('\n').where((x) => x.trim().isNotEmpty).map((x) => x.trim()).toList();
-                final imgList = images.text.split('\n').where((x) => x.trim().isNotEmpty).map((x) => x.trim()).toList();
+                final imgList = _combinedImgs();
+                // Borra fotos locales que se quitaron al editar.
+                final removedLocals = widget.existing?.imageUrls
+                        .where(isLocalImageRef)
+                        .where((r) => !imgList.contains(r))
+                        .toList() ??
+                    [];
+                for (final r in removedLocals) {
+                  await deleteImageRef(r);
+                }
+                if (!c.mounted) return;
                 if (isEdit) {
                   widget.existing!
                     ..type = type
@@ -3970,8 +4148,7 @@ class QCImageChoice extends StatelessWidget {
     itemBuilder: (ctx, idx) {
       final url = urls[idx];
       final isSel = selected == url;
-      // Usa placeholder con icono si no es url http
-      final isNetwork = url.startsWith('http');
+      final kind = classifyImageRef(url);
       return GestureDetector(
         onTap: enabled ? () => onSelect(url) : null,
         child: AnimatedScale(
@@ -3984,9 +4161,9 @@ class QCImageChoice extends StatelessWidget {
               color: Theme.of(c).colorScheme.surface,
             ),
             clipBehavior: Clip.antiAlias,
-            child: isNetwork
-                ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 40))
-                : Center(child: Icon([Icons.pets, Icons.water, Icons.forest, Icons.surfing][idx % 4], size: 48, color: isSel ? QCTokens.primary : Colors.grey)),
+            child: kind == ImageRefKind.placeholder
+                ? Center(child: Icon([Icons.pets, Icons.water, Icons.forest, Icons.surfing][idx % 4], size: 48, color: isSel ? QCTokens.primary : Colors.grey))
+                : imageRefThumb(url),
           ),
         ),
       );

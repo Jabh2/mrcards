@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Opcional: foto de preguntas con cámara. Galería usa el selector del sistema (sin permiso). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:label="MrCards"
         android:name="${applicationName}"
