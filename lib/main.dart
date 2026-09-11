@@ -3399,11 +3399,11 @@ class _QuestionFormState extends State<QuestionForm> {
               onPressed: () async {
                 if (!form.currentState!.validate()) return;
                 if (type == QuestionType.imageChoice &&
-                    _combinedImgs().length < 2) {
+                    _combinedImgs().isEmpty) {
                   ScaffoldMessenger.of(c).showSnackBar(
                     const SnackBar(
                         content:
-                            Text('Agrega al menos 2 imágenes')),
+                            Text('Agrega al menos 1 imagen')),
                   );
                   return;
                 }
