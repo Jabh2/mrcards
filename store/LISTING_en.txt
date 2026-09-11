@@ -1,0 +1,3 @@
+Title: MrCards — Study, Practice & Remember
+Short (80): Offline flashcards. Create decks, review with spaced repetition and master what you study.
+Long: MrCards is 100% offline. Create decks, add any question type (flashcard, multiple choice, true/false, written, ordering, matching, image), study in review/random/exam/marathon with smart re-queue of mistakes until mastered. 6 languages, levels, streaks and achievements. Your data stays on device.

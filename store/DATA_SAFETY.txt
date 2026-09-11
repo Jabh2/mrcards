@@ -1,0 +1,7 @@
+Data Safety (Play Console):
+- Collects data? No
+- Shares data? No
+- Encryption in transit? N/A (no network)
+- Delete requested? Yes via Settings > Data > Delete all + uninstall
+- Permissions: None (release has no INTERNET)
+- Privacy policy URL: https://<tu-usuario>.github.io/<repo>/privacy.html  (sube docs/privacy.html a Pages)

@@ -1,0 +1,3 @@
+Título: MrCards — Estudia, Practica y Recuerda
+Corta (80): Flashcards offline. Crea mazos, repasa con repetición espaciada y domina lo que estudias.
+Larga: MrCards es 100% offline. Crea cuestionarios, añade todo tipo de preguntas (flashcard, test, verdadero/falso, escrita, ordenar, emparejar, imagen), estudia en modos repaso/aleatorio/examen/maratón, y el sistema reencola lo que fallas hasta que lo domines. 6 idiomas, niveles, rachas y logros. Tus datos nunca salen del dispositivo.
