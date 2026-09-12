@@ -5,6 +5,17 @@ Crea mazos y domina lo que estudias con repetición espaciada inteligente. Sin c
 7 TIPOS DE PREGUNTA
 • Flashcard, opción múltiple, verdadero/falso, escrita, ordenar, emparejar, imagen
 • Con pistas, explicaciones e imágenes de apoyo
+• 54 iconos de mazo por materia: ciencias, salud, tecnología, derecho, artes y más
+
+IMPORTA DESDE PDF (BETA)
+• Sube tu cuestionario en PDF y crea las preguntas automáticamente
+• Detecta verdadero/falso, opción múltiple, completar y más
+• Filtra el ruido del documento y resuelve la clave de respuestas
+• Beta: la detección puede requerir ajustes manuales en la revisión según el PDF — todo offline
+
+TUS PROPIAS FOTOS
+• Agrega fotos de galería o cámara en preguntas tipo imagen (hasta 4)
+• Validación flexible: ignora tildes, puntos, comas y pequeños errores de dedo
 
 4 MODOS DE ESTUDIO
 • Repaso: aprende a tu ritmo con calificaciones Otra vez / Difícil / Bien / Fácil
@@ -23,7 +34,7 @@ PROGRESO QUE MOTIVA
 • Interfaz totalmente traducida, funciona 100% offline
 
 PRIVACIDAD PRIMERO
-• 100% offline — guardado local con SharedPreferences (mrcards.v1)
+• 100% offline — guardado local en tu dispositivo
 • Sin analítica, sin anuncios, sin SDK de terceros, sin cuenta
 • Exportar JSON para portabilidad, Eliminar todo en Ajustes > Datos
 • Política: https://jabh2.github.io/mrcards/privacy.html

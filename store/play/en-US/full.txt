@@ -5,6 +5,17 @@ Create decks and master what you study with smart spaced repetition. No account,
 7 QUESTION TYPES
 • Flashcards, multiple choice, true/false, written, ordering, matching, image choice
 • Hints, explanations and image prompts supported
+• 54 deck icons grouped by subject: science, health, tech, law, arts and more
+
+IMPORT FROM PDF (BETA)
+• Upload your questionnaire as PDF and get questions auto-created
+• Detects true/false, multiple choice, fill-in-the-blank and more
+• Noise is filtered out and answer keys are resolved automatically
+• Beta: detection may need manual fixes in review on some PDFs — everything stays offline
+
+YOUR OWN PHOTOS
+• Add gallery or camera photos to image questions (up to 4)
+• Forgiving validation: ignores accents, periods, commas and small typos
 
 4 STUDY MODES
 • Review: learn at your pace with Again / Hard / Good / Easy ratings
@@ -23,7 +34,7 @@ PROGRESS THAT MOTIVATES
 • Full UI translation, works fully offline
 
 PRIVACY FIRST
-• 100% offline — stored locally with SharedPreferences (mrcards.v1)
+• 100% offline — stored locally on your device
 • No analytics, no ads, no third-party SDKs, no account
 • Export JSON for portability, Delete all in Settings > Data
 • Privacy policy: https://jabh2.github.io/mrcards/privacy.html
